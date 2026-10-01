@@ -5,6 +5,8 @@
 #include "EnhancedInputSubsystems.h"
 #include "Engine/LocalPlayer.h"
 #include "InputMappingContext.h"
+#include "AbilitySystemInterface.h"
+#include "PlayerHUDWidget.h"
 #include "Blueprint/UserWidget.h"
 #include "Unreal_GAS.h"
 #include "Widgets/Input/SVirtualJoystick.h"
@@ -12,6 +14,27 @@
 void AUnreal_GASPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// 로컬 플레이어에게만 HUD를 생성해 각 플레이어 화면에 한 번만 표시한다.
+	if (IsLocalPlayerController() && PlayerHUDWidgetClass)
+	{
+		PlayerHUDWidget = CreateWidget<UPlayerHUDWidget>(this, PlayerHUDWidgetClass);
+
+		if (PlayerHUDWidget)
+		{
+			PlayerHUDWidget->AddToPlayerScreen();
+
+			// 현재 조종 중인 Pawn의 ASC를 HUD에 전달해 Health와 Mana 변경을 감지하게 한다.
+			IAbilitySystemInterface* AbilitySystemInterface =
+				Cast<IAbilitySystemInterface>(GetPawn());
+
+			if (AbilitySystemInterface)
+			{
+				PlayerHUDWidget->InitializeWithAbilitySystem(
+					AbilitySystemInterface->GetAbilitySystemComponent());
+			}
+		}
+	}
 
 	// only spawn touch controls on local player controllers
 	if (IsLocalPlayerController() && ShouldUseTouchControls())

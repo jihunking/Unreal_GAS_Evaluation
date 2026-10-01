@@ -2,6 +2,11 @@
 
 
 #include "FireballProjectile.h"
+#include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystemComponent.h"
+#include "GameplayTagContainer.h"
+#include "GameplayEffect.h"
+
 
 AFireballProjectile::AFireballProjectile()
 {
@@ -37,10 +42,72 @@ void AFireballProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 
+	ProjectileMovementComponent->OnProjectileStop.AddDynamic(this, &AFireballProjectile::HandleProjectileStop);
+
 	AActor* OwnerActor = GetOwner();			// 이 Actor의 Owner로 지정된 Actor를 반환한다.
 	if (OwnerActor != nullptr)					// Owner 포인터가 유효한지 검사한다.
 	{
 		CollisionComponent->IgnoreActorWhenMoving(OwnerActor, true);	// 이동 충돌 검사에서 지정한 Actor를 무시할지 설정한다.
 	}
+}
+
+void AFireballProjectile::HandleProjectileStop(const FHitResult& ImpactResult)
+{
+	AActor* HitActor = ImpactResult.GetActor();		// 충돌한 Actor를 반환한다.
+	AActor* OwnerActor = GetOwner();				// 이 Actor의 Owner로 지정된 Actor를 반환한다.
+
+	if(!HitActor || !OwnerActor)					// 충돌한 Actor와 Owner 포인터가 유효한지 검사한다.
+	{
+		Destroy();									// 이 Actor를 제거한다.
+		return;
+	}
+
+	UAbilitySystemComponent* SourceASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OwnerActor);	// Owner Actor의 Ability System Component를 반환한다.
+	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor);	// 충돌한 Actor의 Ability System Component를 반환한다.
+
+	if(!SourceASC || !TargetASC)					// Ability System Component 포인터가 유효한지 검사한다.
+	{
+		Destroy();									// 이 Actor를 제거한다.
+		return;
+	}
+
+	static const FGameplayTag BurnTag = FGameplayTag::RequestGameplayTag(FName("State.Burning"));	// "State.Burning" Gameplay Tag를 요청한다.
+
+	const bool bWasBurning = TargetASC->HasMatchingGameplayTag(BurnTag);	// 충돌한 Actor가 "State.Burning" Gameplay Tag를 가지고 있는지 검사한다.
+
+	const float DamageMagnitude = bWasBurning ? -20.0f : -10.0f;	// 즉시 적용할 데미지 수치를 설정한다.
+
+	FGameplayEffectContextHandle EffectContext = SourceASC->MakeEffectContext();
+
+	EffectContext.AddSourceObject(this);
+	EffectContext.AddHitResult(ImpactResult, true);
+
+	if (DamageEffectClass)
+	{
+		FGameplayEffectSpecHandle DamageSpecHandle = SourceASC->MakeOutgoingSpec(DamageEffectClass, 1.0f, EffectContext);	 // SourceASC를 통해 DamageEffectClass의 Gameplay Effect Spec을 생성한다.
+
+		// DamageSpecHandle가 유효한지 검사한다.
+		if (DamageSpecHandle.IsValid())
+		{
+			static const FGameplayTag DamageTag = FGameplayTag::RequestGameplayTag(FName(TEXT("Data.Damage")));				// "Data.Damage" Gameplay Tag를 요청한다.
+
+			DamageSpecHandle.Data->SetSetByCallerMagnitude(DamageTag, DamageMagnitude);										// DamageTag에 대한 SetByCaller Magnitude를 설정한다.
+
+			SourceASC->ApplyGameplayEffectSpecToTarget(*DamageSpecHandle.Data.Get(), TargetASC);							// TargetASC에 DamageSpecHandle을 적용한다.
+		}
+	}
+
+	if (BurnEffectClass)
+	{
+		FGameplayEffectSpecHandle BurnSpecHandle = SourceASC->MakeOutgoingSpec(BurnEffectClass, 1.0f, EffectContext);		// SourceASC를 통해 BurnEffectClass의 Gameplay Effect Spec을 생성한다.
+
+		// BurnSpecHandle가 유효한지 검사한다.
+		if (BurnSpecHandle.IsValid())
+		{
+			SourceASC->ApplyGameplayEffectSpecToTarget(*BurnSpecHandle.Data.Get(), TargetASC);								// TargetASC에 BurnSpecHandle을 적용한다.
+		}
+	}
+	Destroy();		// 이 Actor를 제거한다.
+
 }
 

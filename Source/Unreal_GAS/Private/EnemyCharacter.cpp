@@ -66,6 +66,15 @@ void AEnemyCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void AEnemyCharacter::HandleHealthChanged(
 	const FOnAttributeChangeData& Data)
 {
+	if (!FMath::IsNearlyEqual(Data.OldValue, Data.NewValue))
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("Enemy HP: %.0f -> %.0f (Damage: %.0f)"),
+			Data.OldValue,
+			Data.NewValue,
+			FMath::Max(0.0f, Data.OldValue - Data.NewValue));
+	}
+
 	UpdateHealthBar();
 }
 

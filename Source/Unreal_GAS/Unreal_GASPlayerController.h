@@ -7,6 +7,7 @@
 #include "Unreal_GASPlayerController.generated.h"
 
 class UInputMappingContext;
+class UPlayerHUDWidget;
 class UUserWidget;
 
 /**
@@ -35,6 +36,14 @@ protected:
 	/** Pointer to the mobile controls widget */
 	UPROPERTY()
 	TObjectPtr<UUserWidget> MobileControlsWidget;
+
+	/** Class of the player HUD widget displayed on the local player's screen. */
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UPlayerHUDWidget> PlayerHUDWidgetClass;
+
+	/** Player HUD widget instance owned by this local player controller. */
+	UPROPERTY()
+	TObjectPtr<UPlayerHUDWidget> PlayerHUDWidget;
 
 	/** If true, the player will use UMG touch controls even if not playing on mobile platforms */
 	UPROPERTY(EditAnywhere, Config, Category = "Input|Touch Controls")

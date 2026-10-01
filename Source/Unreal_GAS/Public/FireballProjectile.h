@@ -9,6 +9,8 @@
 #include "FireballProjectile.generated.h"
 
 class USphereComponent;
+class UGameplayEffect;
+struct FHitResult;
 
 /**
  * AFireballProjectile은 월드 안을 날아가는 Fireball 발사체 Actor이다.
@@ -32,5 +34,17 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+
+	// 발사체가 충돌로 이동을 멈췄을 때 호출된다.
+	UFUNCTION()
+	void HandleProjectileStop(const FHitResult& ImpactResult);
+
+	// 명중 즉시 Health를 감소시키는 Gameplay Effect 클래스를 지정한다.
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gameplay Effects")
+	TSubclassOf<UGameplayEffect> DamageEffectClass;
+
+	// 5초 동안 Burn 상태와 지속 데미지를 적용하는 Gameplay Effect 클래스를 지정한다.
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gameplay Effects")
+	TSubclassOf<UGameplayEffect> BurnEffectClass;
 
 };
