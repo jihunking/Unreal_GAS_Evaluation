@@ -21,7 +21,12 @@ public class Unreal_GAS : ModuleRules
 			"Slate"
 		});
 
-		PrivateDependencyModuleNames.AddRange(new string[] { });
+		PrivateDependencyModuleNames.AddRange(new string[] 
+		{
+            "GameplayAbilities",
+		    "GameplayTags",
+			"GameplayTasks"
+        });
 
 		PublicIncludePaths.AddRange(new string[] {
 			"Unreal_GAS",
