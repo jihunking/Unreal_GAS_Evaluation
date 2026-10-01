@@ -17,6 +17,7 @@ class UInputAction;
 
 class UAbilitySystemComponent;
 class UPlayerAttributeSet;
+class UGameplayAbility;
 
 struct FInputActionValue;
 
@@ -59,6 +60,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* MouseLookAction;
 
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* FireballAction;
+
 public:
 
 	/** Constructor */
@@ -76,6 +80,8 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+
+	void ActivateFireball();
 
 public:
 
@@ -115,6 +121,9 @@ protected:
 	// Health와 Mana 같은 플레이어 수치를 보관한다.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS")
 	TObjectPtr<UPlayerAttributeSet> PlayerAttributeSet;	
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS")
+	TSubclassOf<UGameplayAbility> FireballAbilityClass;
 
 protected:
 	// Actor가 월드에서 플레이를 시작할 때 호출되는 생명주기 함수다.

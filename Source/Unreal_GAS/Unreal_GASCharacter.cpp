@@ -72,6 +72,11 @@ void AUnreal_GASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AUnreal_GASCharacter::Look);
+		
+		if (FireballAction)
+		{
+			EnhancedInputComponent->BindAction(FireballAction, ETriggerEvent::Started, this, &AUnreal_GASCharacter::ActivateFireball);
+		}
 	}
 	else
 	{
@@ -95,6 +100,14 @@ void AUnreal_GASCharacter::Look(const FInputActionValue& Value)
 
 	// route the input
 	DoLook(LookAxisVector.X, LookAxisVector.Y);
+}
+
+void AUnreal_GASCharacter::ActivateFireball()
+{
+	if (AbilitySystemComponent && FireballAbilityClass)
+	{
+		AbilitySystemComponent->TryActivateAbilityByClass(FireballAbilityClass);
+	}
 }
 
 void AUnreal_GASCharacter::DoMove(float Right, float Forward)
@@ -152,5 +165,12 @@ void AUnreal_GASCharacter::BeginPlay()
 	if (AbilitySystemComponent != nullptr)	
 	{
 		AbilitySystemComponent->InitAbilityActorInfo(this, this);	// 첫 번째 인자를 OwnerActor, 두 번째 인자를 AvatarActor로 ASC에 등록한다.
+
+		// 서버 권한이 있고, FireballAbilityClass가 유효한지 검사한다.
+		if (HasAuthority() && FireballAbilityClass)
+		{
+			FGameplayAbilitySpec AbilitySpec(FireballAbilityClass, 1);		// FGameplayAbilitySpec을 생성하고
+			AbilitySystemComponent->GiveAbility(AbilitySpec);				// ASC에 어빌리티를 부여한다.
+		}
 	}
 }
