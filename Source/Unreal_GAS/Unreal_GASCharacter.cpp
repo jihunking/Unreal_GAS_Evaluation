@@ -12,6 +12,9 @@
 #include "InputActionValue.h"
 #include "Unreal_GAS.h"
 
+#include "AbilitySystemComponent.h"
+#include "PlayerAttributeSet.h"
+
 AUnreal_GASCharacter::AUnreal_GASCharacter()
 {
 	// Set size for collision capsule
@@ -45,6 +48,10 @@ AUnreal_GASCharacter::AUnreal_GASCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
+
+	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("ASC"));	// 지정한 타입의 기본 서브오브젝트를 생성한다.
+	PlayerAttributeSet = CreateDefaultSubobject<UPlayerAttributeSet>(TEXT("Stat"));		// 지정한 타입의 기본 서브오브젝트를 생성한다.
+
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
@@ -130,4 +137,20 @@ void AUnreal_GASCharacter::DoJumpEnd()
 {
 	// signal the character to stop jumping
 	StopJumping();
+}
+
+UAbilitySystemComponent* AUnreal_GASCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;	// 캐릭터가 소유한 ASC 포인터를 반환한다.
+}
+
+void AUnreal_GASCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// ASC 포인터가 유효한지 검사한다.
+	if (AbilitySystemComponent != nullptr)	
+	{
+		AbilitySystemComponent->InitAbilityActorInfo(this, this);	// 첫 번째 인자를 OwnerActor, 두 번째 인자를 AvatarActor로 ASC에 등록한다.
+	}
 }

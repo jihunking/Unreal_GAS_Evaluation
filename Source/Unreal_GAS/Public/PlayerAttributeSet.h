@@ -17,7 +17,7 @@ class UNREAL_GAS_API UPlayerAttributeSet : public UAttributeSet
 	
 
 public:
-	UPlayerAttributeSet();		// 생성자
+	UPlayerAttributeSet();
 
 
 	UPROPERTY(BlueprintReadOnly, Category = "Base Stat")

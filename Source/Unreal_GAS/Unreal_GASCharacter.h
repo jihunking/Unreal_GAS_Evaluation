@@ -5,11 +5,19 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+
+#include "AbilitySystemInterface.h"
+
+
 #include "Unreal_GASCharacter.generated.h"
 
 class USpringArmComponent;
 class UCameraComponent;
 class UInputAction;
+
+class UAbilitySystemComponent;
+class UPlayerAttributeSet;
+
 struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
@@ -18,8 +26,10 @@ DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
  *  A simple player-controllable third person character
  *  Implements a controllable orbiting camera
  */
+// IAbilitySystemInterface를 상속하면 GAS 코드가 캐릭터의 구체적인 클래스를 몰라도
+// GetAbilitySystemComponent()를 호출해 이 캐릭터의 ASC를 찾을 수 있다.
 UCLASS(abstract)
-class AUnreal_GASCharacter : public ACharacter
+class AUnreal_GASCharacter : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -92,5 +102,23 @@ public:
 
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+public:
+	// 이 캐릭터가 소유한 ASC를 반환한다.
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;	
+
+protected:
+	// 어빌리티와 Gameplay Effect를 관리하는 GAS 컴포넌트다.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS")
+	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;	
+
+	// Health와 Mana 같은 플레이어 수치를 보관한다.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS")
+	TObjectPtr<UPlayerAttributeSet> PlayerAttributeSet;	
+
+protected:
+	// Actor가 월드에서 플레이를 시작할 때 호출되는 생명주기 함수다.
+	void BeginPlay() override;	
+
 };
 
